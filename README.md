@@ -2,7 +2,10 @@
 
 **[▶ Live demo](https://viraj-vekariya.github.io/05-urban-demand-warehouse/)** — the fleet allocation runs in your browser over all 39,033 real cells. The bounded-heap top-k and greedy capacity fill are reimplemented in JavaScript and [verified against the Python](tools/check_js_matches_python.py) on 15 cases.
 
-**[⇧ Deploy it yourself](https://render.com/deploy?repo=https://github.com/viraj-vekariya/05-urban-demand-warehouse)** — one click builds `render.yaml` on Render's free tier: the allocation API over a two-month warehouse build. No card, no configuration.
+**[⇧ Deploy your own copy](https://render.com/deploy?repo=https://github.com/viraj-vekariya/05-urban-demand-warehouse)** — one click builds `render.yaml` on Render's free tier: the allocation API over a two-month warehouse build. No card, no configuration.
+
+**[◆ Live API](https://urban-demand-warehouse.onrender.com)** — the warehouse and the allocator. `/api/allocate?fleet=500` places 500 drivers across 32,060 real demand cells and returns the expected revenue; `/api/backtest` compares the three policies on held-out months.
+Free tier, so a cold instance takes ~50s to wake.
 
 **Where should the fleet be tomorrow?** A partitioned Parquet warehouse over **39.2 million
 real NYC taxi trips**, a SQL demand mart, a capacity-constrained allocation algorithm, and
