@@ -1,6 +1,9 @@
 duckdb>=1.0
 numpy>=1.26
+# lightgbm's sklearn API needs scikit-learn at import time, and src/forecast.py also
+# falls back to sklearn's HistGradientBoostingRegressor when lightgbm is absent.
 lightgbm>=4.0
+scikit-learn>=1.4
 fastapi>=0.115
 uvicorn[standard]>=0.30
 pytest>=8.0
