@@ -1,0 +1,10 @@
+duckdb>=1.0
+numpy>=1.26
+lightgbm>=4.0
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pytest>=8.0
+
+# Optional. The pipeline runs entirely on DuckDB; etl/spark_job.py is the distributed
+# implementation and the cross-engine verification. Needs a JVM.
+pyspark>=3.5

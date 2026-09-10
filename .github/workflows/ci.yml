@@ -1,0 +1,122 @@
+name: urban-demand-ci
+
+# Each job defends a claim.
+#   logic     the allocation, quality rules and seasonal maths are correct, with no data
+#   pipeline  3 real months load, reconcile, and reproduce the headline numbers
+#   spark     the distributed implementation agrees with DuckDB exactly
+
+on:
+  push: {branches: [main]}
+  pull_request: {branches: [main]}
+  workflow_dispatch:
+
+jobs:
+  logic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install numpy pytest
+      - name: Algorithm and pipeline-logic tests
+        # No duckdb, no download. The allocation and the quality rules must stand alone.
+        run: python -m pytest tests/test_allocation.py tests/test_pipeline.py -q
+
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: |
+          grep -v '^pyspark' requirements.txt > rt.txt
+          pip install -r rt.txt
+
+      - name: Cache the TLC parquet
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: tlc-2024-3months-v1
+
+      - run: python data/fetch.py --year 2024 --months 3
+      - run: python -m etl.incremental
+      - name: Build the warehouse
+        # src.build exits non-zero on any reconciliation failure, so this step is the gate.
+        run: python -m src.build
+      - run: python -m pytest tests/ -q
+
+      - name: The exclusion rate must stay low
+        run: |
+          python - <<'PY'
+          import json
+          e = json.load(open("outputs/etl.json"))
+          print(f"excluded {e['excluded_pct']}% of {e['source_rows']:,} rows")
+          # REGRESSION GATE. Treating a NULL passenger_count as disqualifying pushed
+          # this to 14.71% and silently removed an eighth of all demand, biased toward
+          # airport trips. The correct rule gives ~4.8%.
+          assert e["excluded_pct"] < 10.0, \
+              f"{e['excluded_pct']}% excluded - is NULL passenger_count disqualifying again?"
+          PY
+
+      - name: The backtest lift must hold
+        run: |
+          python -m src.backtest
+          python - <<'PY'
+          import json
+          b = json.load(open("outputs/backtest.json"))
+          lift = b["mean_lift_over_best_baseline_pct"]
+          print(f"mean lift over the best baseline: {lift:+.2f}%")
+          # The project's central claim: ranking by revenue per driver-hour beats
+          # ranking by trip volume. If this stops holding, the metric is not doing what
+          # the README says it does.
+          assert lift > 5.0, f"the allocation lift collapsed to {lift}%"
+          for row in b["lift"]:
+              assert row["vs_uniform_pct"] > 0, "a policy lost to a uniform spread"
+          PY
+
+      - name: The model must be honestly compared to the baseline
+        run: |
+          python -m src.report
+          python - <<'PY'
+          import json
+          r = json.load(open("outputs/results.json"))
+          f = r["forecast"]
+          print(f"baseline MAE {f['baseline']['mae']}, model MAE {f['model']['mae']}")
+          print(f"verdict: {f['verdict']}")
+          # No assertion that the model WINS. It does not, and that is the reported
+          # finding. What is asserted is that the comparison is actually made - a
+          # pipeline that quietly stopped computing the baseline could claim anything.
+          assert f["baseline"]["mae"] > 0 and f["model"]["mae"] > 0
+          assert f["model"]["beats_baseline"] is not None
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: measured-results
+          path: outputs/*.json
+
+  spark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: "17"}
+      - run: pip install -r requirements.txt
+      - uses: actions/cache@v4
+        with: {path: data/raw, key: tlc-2024-3months-v1}
+      - run: python data/fetch.py --year 2024 --months 2 && python -m etl.incremental
+
+      - name: Spark must agree with DuckDB exactly
+        run: |
+          python -m etl.spark_job --verify --months 2
+          python - <<'PY'
+          import json
+          s = json.load(open("outputs/spark.json"))
+          print(json.dumps(s.get("matches", {}), indent=2))
+          # Two independent implementations agreeing is a far stronger correctness claim
+          # than either alone. If they diverge, one of them is wrong and the pipeline
+          # should not ship until it is known which.
+          assert s["totals_match"], "Spark and DuckDB disagree on the totals"
+          PY

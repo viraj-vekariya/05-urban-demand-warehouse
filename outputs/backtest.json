@@ -1,0 +1,167 @@
+{
+  "generated_at": "2026-09-10T07:16:30",
+  "train_months": [
+    "2024-01",
+    "2024-02",
+    "2024-03",
+    "2024-04",
+    "2024-05",
+    "2024-06",
+    "2024-07",
+    "2024-08",
+    "2024-09"
+  ],
+  "test_months": [
+    "2024-10",
+    "2024-11",
+    "2024-12"
+  ],
+  "train_cells": 37959,
+  "test_cells": 35477,
+  "results": [
+    {
+      "fleet_size": 100,
+      "policy": "revenue_per_hour",
+      "realised_weekly_revenue": 2169503.47,
+      "revenue_per_driver_hour": 129.1371,
+      "drivers_to_dead_cells": 568,
+      "drivers_over_capacity": 1081,
+      "driver_hours_assigned": 16232
+    },
+    {
+      "fleet_size": 100,
+      "policy": "trip_volume",
+      "realised_weekly_revenue": 1842185.42,
+      "revenue_per_driver_hour": 109.6539,
+      "drivers_to_dead_cells": 0,
+      "drivers_over_capacity": 270,
+      "driver_hours_assigned": 16800
+    },
+    {
+      "fleet_size": 100,
+      "policy": "uniform",
+      "realised_weekly_revenue": 1448374.44,
+      "revenue_per_driver_hour": 86.2128,
+      "drivers_to_dead_cells": 1068,
+      "drivers_over_capacity": 0,
+      "driver_hours_assigned": 15732
+    },
+    {
+      "fleet_size": 300,
+      "policy": "revenue_per_hour",
+      "realised_weekly_revenue": 6440931.47,
+      "revenue_per_driver_hour": 127.7963,
+      "drivers_to_dead_cells": 718,
+      "drivers_over_capacity": 2320,
+      "driver_hours_assigned": 49682
+    },
+    {
+      "fleet_size": 300,
+      "policy": "trip_volume",
+      "realised_weekly_revenue": 5425621.6,
+      "revenue_per_driver_hour": 107.6512,
+      "drivers_to_dead_cells": 8,
+      "drivers_over_capacity": 1180,
+      "driver_hours_assigned": 50392
+    },
+    {
+      "fleet_size": 300,
+      "policy": "uniform",
+      "realised_weekly_revenue": 3150718.41,
+      "revenue_per_driver_hour": 62.5143,
+      "drivers_to_dead_cells": 3556,
+      "drivers_over_capacity": 0,
+      "driver_hours_assigned": 34403
+    },
+    {
+      "fleet_size": 500,
+      "policy": "revenue_per_hour",
+      "realised_weekly_revenue": 10371293.41,
+      "revenue_per_driver_hour": 123.4678,
+      "drivers_to_dead_cells": 1024,
+      "drivers_over_capacity": 3422,
+      "driver_hours_assigned": 82839
+    },
+    {
+      "fleet_size": 500,
+      "policy": "trip_volume",
+      "realised_weekly_revenue": 8939126.71,
+      "revenue_per_driver_hour": 106.4182,
+      "drivers_to_dead_cells": 203,
+      "drivers_over_capacity": 1989,
+      "driver_hours_assigned": 83660
+    },
+    {
+      "fleet_size": 500,
+      "policy": "uniform",
+      "realised_weekly_revenue": 5218344.56,
+      "revenue_per_driver_hour": 62.1231,
+      "drivers_to_dead_cells": 7112,
+      "drivers_over_capacity": 11514,
+      "driver_hours_assigned": 68806
+    },
+    {
+      "fleet_size": 1000,
+      "policy": "revenue_per_hour",
+      "realised_weekly_revenue": 19158827.52,
+      "revenue_per_driver_hour": 114.0406,
+      "drivers_to_dead_cells": 1550,
+      "drivers_over_capacity": 4825,
+      "driver_hours_assigned": 161886
+    },
+    {
+      "fleet_size": 1000,
+      "policy": "trip_volume",
+      "realised_weekly_revenue": 17194139.03,
+      "revenue_per_driver_hour": 102.3461,
+      "drivers_to_dead_cells": 683,
+      "drivers_over_capacity": 4155,
+      "driver_hours_assigned": 162753
+    },
+    {
+      "fleet_size": 1000,
+      "policy": "uniform",
+      "realised_weekly_revenue": 8018814.65,
+      "revenue_per_driver_hour": 47.731,
+      "drivers_to_dead_cells": 14777,
+      "drivers_over_capacity": 53616,
+      "driver_hours_assigned": 139848
+    }
+  ],
+  "lift": [
+    {
+      "fleet_size": 100,
+      "revenue_policy": 2169503.47,
+      "best_baseline": 1842185.42,
+      "best_baseline_policy": "trip_volume",
+      "lift_pct": 17.77,
+      "vs_uniform_pct": 49.79
+    },
+    {
+      "fleet_size": 300,
+      "revenue_policy": 6440931.47,
+      "best_baseline": 5425621.6,
+      "best_baseline_policy": "trip_volume",
+      "lift_pct": 18.71,
+      "vs_uniform_pct": 104.43
+    },
+    {
+      "fleet_size": 500,
+      "revenue_policy": 10371293.41,
+      "best_baseline": 8939126.71,
+      "best_baseline_policy": "trip_volume",
+      "lift_pct": 16.02,
+      "vs_uniform_pct": 98.75
+    },
+    {
+      "fleet_size": 1000,
+      "revenue_policy": 19158827.52,
+      "best_baseline": 17194139.03,
+      "best_baseline_policy": "trip_volume",
+      "lift_pct": 11.43,
+      "vs_uniform_pct": 138.92
+    }
+  ],
+  "mean_lift_over_best_baseline_pct": 15.98,
+  "seconds": 1.2
+}

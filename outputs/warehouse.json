@@ -1,0 +1,159 @@
+{
+  "generated_at": "2026-09-10T07:13:17",
+  "sql_steps": [
+    {
+      "file": "01_dim_zone.sql",
+      "ms": 7.2
+    },
+    {
+      "file": "02_fact_trip.sql",
+      "ms": 1.6
+    },
+    {
+      "file": "03_mart_demand.sql",
+      "ms": 844.2
+    },
+    {
+      "file": "04_mart_revenue.sql",
+      "ms": 58.5
+    }
+  ],
+  "reconciliation": [
+    {
+      "check": "demand_trips_equal_fact_trips",
+      "left": 39203425,
+      "right": 39203425,
+      "passed": true
+    },
+    {
+      "check": "demand_revenue_equals_fact_revenue",
+      "left": 1103993060,
+      "right": 1103993060,
+      "passed": true
+    },
+    {
+      "check": "profile_trips_equal_demand_trips",
+      "left": 39203425,
+      "right": 39203425,
+      "passed": true
+    },
+    {
+      "check": "zone_summary_ties_to_demand",
+      "left": 39203425,
+      "right": 39203425,
+      "passed": true
+    },
+    {
+      "check": "hourly_profile_ties_to_demand",
+      "left": 39203425,
+      "right": 39203425,
+      "passed": true
+    },
+    {
+      "check": "monthly_ties_to_demand",
+      "left": 39203425,
+      "right": 39203425,
+      "passed": true
+    },
+    {
+      "check": "hour_of_week_spine_is_complete",
+      "left": 168,
+      "right": 168,
+      "passed": true
+    },
+    {
+      "check": "no_unknown_zones_survived",
+      "left": 0,
+      "right": 0,
+      "passed": true
+    },
+    {
+      "check": "every_demand_zone_exists_in_dim",
+      "left": 0,
+      "right": 0,
+      "passed": true
+    }
+  ],
+  "all_checks_passed": true,
+  "totals": {
+    "trips": 39203425,
+    "revenue": 1103993060.3899457,
+    "driver_hours": 11031247.18416666,
+    "cells": 39033,
+    "months": 12
+  },
+  "monthly": [
+    {
+      "month": "2024-01",
+      "trips": 2831068,
+      "revenue": 76288207.1600003,
+      "revenue_per_driver_hour": 108.23327289898948
+    },
+    {
+      "month": "2024-02",
+      "trips": 2866895,
+      "revenue": 77046804.38000028,
+      "revenue_per_driver_hour": 105.11245279840469
+    },
+    {
+      "month": "2024-03",
+      "trips": 3403527,
+      "revenue": 93361733.44000006,
+      "revenue_per_driver_hour": 102.31552666660035
+    },
+    {
+      "month": "2024-04",
+      "trips": 3377240,
+      "revenue": 93706279.78000028,
+      "revenue_per_driver_hour": 101.35202980674168
+    },
+    {
+      "month": "2024-05",
+      "trips": 3574551,
+      "revenue": 102057581.58000022,
+      "revenue_per_driver_hour": 98.13526108870636
+    },
+    {
+      "month": "2024-06",
+      "trips": 3386026,
+      "revenue": 95453687.14000005,
+      "revenue_per_driver_hour": 99.69466113777634
+    },
+    {
+      "month": "2024-07",
+      "trips": 2932600,
+      "revenue": 83258195.59000012,
+      "revenue_per_driver_hour": 102.67769213302167
+    },
+    {
+      "month": "2024-08",
+      "trips": 2824428,
+      "revenue": 80784209.0200004,
+      "revenue_per_driver_hour": 102.72547485385148
+    },
+    {
+      "month": "2024-09",
+      "trips": 3440258,
+      "revenue": 99606880.80000028,
+      "revenue_per_driver_hour": 95.70187893062682
+    },
+    {
+      "month": "2024-10",
+      "trips": 3630148,
+      "revenue": 104795540.86000028,
+      "revenue_per_driver_hour": 97.64153142560171
+    },
+    {
+      "month": "2024-11",
+      "trips": 3466518,
+      "revenue": 97238455.73000029,
+      "revenue_per_driver_hour": 97.53207531123407
+    },
+    {
+      "month": "2024-12",
+      "trips": 3470166,
+      "revenue": 100395484.9100003,
+      "revenue_per_driver_hour": 95.56159690627898
+    }
+  ]
+}

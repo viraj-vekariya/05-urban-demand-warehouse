@@ -1,0 +1,14 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        # Raise to 12 for the full year. The image grows accordingly.
+        MONTHS: "3"
+    ports: ["8500:8500"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8500/health',timeout=3)"]
+      interval: 15s
+      timeout: 4s
+      retries: 5

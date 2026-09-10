@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Urban Demand Warehouse</title>
+<!--
+  Demand heatmap and live fleet allocation over 39.2M real NYC taxi trips.
+
+  The interactive core is the fleet slider. Moving it re-runs the allocation server-side
+  against 39,033 real cells and redraws which zones the fleet is sent to - and the point
+  it makes is the one the backtest measures: the advantage of ranking by revenue-per-
+  driver-hour SHRINKS as the fleet grows, because the high-value cells saturate. A slider
+  shows that in a way a table does not.
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.2/babel.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#141922; --panel2:#1c2430; --line:#28323f;
+    --text:#e7edf4; --dim:#8b96a5; --accent:#f0b429;
+    --ok:#3fa96b; --bad:#d9534f;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+  .wrap{max-width:1300px;margin:0 auto;padding:22px 16px 70px}
+  header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  h1{font-size:21px;margin:0;letter-spacing:-.02em}
+  .sub{color:var(--dim);font-size:13px}
+  .pill{font:600 11px var(--mono);padding:3px 8px;border-radius:999px;
+        border:1px solid var(--line);background:var(--panel2);color:var(--dim)}
+  .pill.ok{color:var(--ok);border-color:#1d4630}
+  .grid{display:grid;gap:14px;margin-top:16px}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+  .two{grid-template-columns:1.25fr 1fr}
+  @media(max-width:960px){.two{grid-template-columns:1fr}}
+  .card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  .card{padding:12px 14px}
+  .card .label{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  .card .value{font:600 22px/1.2 var(--mono);margin-top:5px;letter-spacing:-.02em}
+  .card .foot{color:var(--dim);font-size:11px;font-family:var(--mono);margin-top:2px}
+  .panel{overflow:hidden}
+  .panel h2{font-size:12px;margin:0;padding:11px 14px;border-bottom:1px solid var(--line);
+            color:var(--dim);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+  .pad{padding:13px 14px}
+  .controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:14px 0}
+  .ctl{display:flex;flex-direction:column;gap:4px}
+  .ctl label{font:11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+  input[type=range]{width:220px;accent-color:var(--accent)}
+  select{font:13px var(--mono);padding:7px 9px;border-radius:6px;border:1px solid var(--line);
+         background:var(--panel2);color:var(--text)}
+  .heat{display:grid;grid-template-columns:44px repeat(24,1fr);gap:2px;font:10px var(--mono)}
+  .heat .hdr{color:var(--dim);text-align:center;padding-bottom:2px}
+  .heat .row-label{color:var(--dim);display:flex;align-items:center}
+  .heat .cell{aspect-ratio:1;border-radius:2px;cursor:default}
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+  th{background:var(--panel2);color:var(--dim);text-align:right;padding:7px 10px;
+     font-size:11px;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  td{padding:6px 10px;border-bottom:1px solid #1a222c;text-align:right}
+  .bar{height:6px;border-radius:3px;background:#212a36;overflow:hidden;margin-top:5px}
+  .bar>i{display:block;height:100%;background:var(--accent)}
+  .note{color:var(--dim);font-size:12.5px;padding:0 14px 13px;line-height:1.5;max-width:82ch}
+  .win{color:var(--ok)} .lose{color:var(--bad)}
+  code{font-family:var(--mono);background:var(--panel2);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback} = React;
+const j = u => fetch(u).then(r=>r.ok?r.json():Promise.reject(r.status));
+const money = v => "$" + Math.round(v).toLocaleString();
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function heatColour(v, max){
+  if(!max || v<=0) return "#161d26";
+  const t = Math.pow(v/max, 0.6);                 // gamma so mid values stay visible
+  const r = Math.round(22 + t*(240-22));
+  const g = Math.round(29 + t*(180-29));
+  const b = Math.round(38 + t*(41-38));
+  return `rgb(${r},${g},${b})`;
+}
+
+function Heatmap({cells, metric}){
+  if(!cells?.length) return <div className="pad">no data</div>;
+  const key = metric==="trips" ? "mean_trips_per_day" : "revenue_per_driver_hour";
+  const max = Math.max(...cells.map(c=>c[key]));
+  const byDow = {};
+  cells.forEach(c=>{ (byDow[c.dow] = byDow[c.dow]||{})[c.hour] = c; });
+  return <div className="pad">
+    <div className="heat">
+      <div/>{Array.from({length:24},(_,h)=><div key={h} className="hdr">{h}</div>)}
+      {DAYS.map((d,di)=>[
+        <div key={"l"+di} className="row-label">{d}</div>,
+        ...Array.from({length:24},(_,h)=>{
+          const c = byDow[di]?.[h];
+          const v = c ? c[key] : 0;
+          return <div key={di+"-"+h} className="cell"
+            style={{background:heatColour(v,max)}}
+            title={`${d} ${String(h).padStart(2,"0")}:00 — ${key==="mean_trips_per_day"
+              ? v.toFixed(1)+" trips/day" : "$"+v.toFixed(2)+"/driver-hour"}`}/>;
+        })])}
+    </div>
+  </div>;
+}
+
+function App(){
+  const [health,setHealth]=useState(null);
+  const [summary,setSummary]=useState(null);
+  const [heat,setHeat]=useState(null);
+  const [metric,setMetric]=useState("value");
+  const [fleet,setFleet]=useState(300);
+  const [hour,setHour]=useState(18);
+  const [dow,setDow]=useState(4);
+  const [cmp,setCmp]=useState(null);
+  const [alloc,setAlloc]=useState(null);
+  const [zones,setZones]=useState(null);
+  const [order,setOrder]=useState("value");
+
+  useEffect(()=>{ j("/health").then(setHealth).catch(()=>{});
+                  j("/api/summary").then(setSummary).catch(()=>{});
+                  j("/api/heatmap").then(setHeat).catch(()=>{}); },[]);
+  useEffect(()=>{ j(`/api/zones?order=${order}&limit=12`).then(setZones).catch(()=>{}); },[order]);
+
+  const refresh = useCallback(()=>{
+    j(`/api/compare?fleet=${fleet}&hour=${hour}&dow=${dow}`).then(setCmp).catch(()=>{});
+    j(`/api/allocate?fleet=${fleet}&hour=${hour}&dow=${dow}`).then(setAlloc).catch(()=>{});
+  },[fleet,hour,dow]);
+  useEffect(()=>{ const t=setTimeout(refresh,140); return ()=>clearTimeout(t); },[refresh]);
+
+  const d = summary?.data, bt = summary?.backtest;
+
+  return <div className="wrap">
+    <header>
+      <h1>Urban Demand Warehouse</h1>
+      <span className="sub">NYC TLC 2024 · where should the fleet be tomorrow?</span>
+      {health && <span className={"pill "+(health.status==="ok"?"ok":"")}>{health.status}</span>}
+      {health && <span className="pill">{health.cells.toLocaleString()} cells</span>}
+    </header>
+
+    {d && <div className="grid cards">
+      <div className="card"><div className="label">Trips</div>
+        <div className="value">{(d.loaded_rows/1e6).toFixed(1)}M</div>
+        <div className="foot">12 months, {d.excluded_pct}% excluded</div></div>
+      <div className="card"><div className="label">Revenue</div>
+        <div className="value">${(d.revenue/1e9).toFixed(2)}B</div>
+        <div className="foot">{Math.round(d.driver_hours/1e6*10)/10}M driver-hours</div></div>
+      <div className="card"><div className="label">Cells</div>
+        <div className="value">{d.cells.toLocaleString()}</div>
+        <div className="foot">zone × weekday × hour</div></div>
+      {bt && <div className="card"><div className="label">Backtest lift</div>
+        <div className="value">+{bt.mean_lift_over_best_baseline_pct}%</div>
+        <div className="foot">vs trip-volume ranking</div></div>}
+      {summary?.forecast && <div className="card"><div className="label">Model vs baseline</div>
+        <div className="value" style={{color:summary.forecast.model.beats_baseline?"var(--ok)":"var(--bad)"}}>
+          {summary.forecast.model.improvement_over_baseline_pct}%</div>
+        <div className="foot">GBM MAE vs cell-mean MAE</div></div>}
+      {summary?.seasonal && <div className="card"><div className="label">Seasonal strength</div>
+        <div className="value">{summary.seasonal.seasonal_strength.toFixed(3)}</div>
+        <div className="foot">hour-of-week cycle</div></div>}
+    </div>}
+
+    <div className="panel" style={{marginTop:14}}>
+      <h2>Demand heatmap — weekday × hour</h2>
+      <div className="pad" style={{paddingBottom:0}}>
+        <select value={metric} onChange={e=>setMetric(e.target.value)}>
+          <option value="value">revenue per driver-hour</option>
+          <option value="trips">trips per day</option>
+        </select>
+      </div>
+      <Heatmap cells={heat?.cells} metric={metric}/>
+      <div className="note">Hover a cell for its value. Switching the metric changes which
+        hours look attractive — that divergence is the entire reason the allocation ranks
+        by revenue per driver-hour rather than by trip count.</div>
+    </div>
+
+    <div className="panel" style={{marginTop:14}}>
+      <h2>Live allocation — move the fleet slider</h2>
+      <div className="pad">
+        <div className="controls">
+          <div className="ctl"><label>fleet size — {fleet}</label>
+            <input type="range" min="50" max="3000" step="50" value={fleet}
+                   onChange={e=>setFleet(+e.target.value)}/></div>
+          <div className="ctl"><label>hour — {String(hour).padStart(2,"0")}:00</label>
+            <input type="range" min="0" max="23" value={hour}
+                   onChange={e=>setHour(+e.target.value)}/></div>
+          <div className="ctl"><label>day</label>
+            <select value={dow} onChange={e=>setDow(+e.target.value)}>
+              {DAYS.map((d,i)=><option key={i} value={i}>{d}</option>)}</select></div>
+        </div>
+
+        {cmp && <table>
+          <thead><tr><th>policy</th><th>expected revenue</th><th>per driver</th>
+            <th>cells used</th><th>idle</th><th>vs best</th></tr></thead>
+          <tbody>{Object.entries(cmp.policies).map(([name,v])=>
+            <tr key={name}><td>{name.replace(/_/g," ")}</td>
+              <td>{money(v.expected_revenue)}</td>
+              <td>${v.revenue_per_driver.toFixed(2)}</td>
+              <td>{v.cells_used}</td><td>{v.drivers_idle}</td>
+              <td className={v.vs_best_pct===0?"win":"lose"}>
+                {v.vs_best_pct===0?"best":v.vs_best_pct+"%"}</td></tr>)}
+          </tbody></table>}
+      </div>
+      <div className="note">
+        Drag the fleet slider up. The gap between <code>revenue_per_hour</code> and
+        <code>trip_volume</code> <b>narrows</b> as the fleet grows, because the
+        high-value cells saturate and extra drivers must go somewhere worse. The backtest
+        measures the same decay on held-out months: +17.8% at 100 drivers, +11.4% at 1,000.
+      </div>
+    </div>
+
+    <div className="grid two">
+      <div className="panel">
+        <h2>Where the fleet is sent — {DAYS[dow]} {String(hour).padStart(2,"0")}:00</h2>
+        <div className="pad">{alloc?.assignments?.length
+          ? <table>
+              <thead><tr><th>zone</th><th>borough</th><th>drivers</th>
+                <th>$/driver-hr</th><th>utilisation</th></tr></thead>
+              <tbody>{alloc.assignments.slice(0,12).map((a,i)=>
+                <tr key={i}><td>{a.zone_name}</td><td>{a.borough}</td>
+                  <td>{a.drivers}</td><td>${a.revenue_per_driver_hour.toFixed(2)}</td>
+                  <td>{(a.utilisation*100).toFixed(0)}%</td></tr>)}
+              </tbody></table>
+          : <div style={{color:"var(--dim)"}}>no assignment</div>}</div>
+      </div>
+
+      <div className="panel">
+        <h2>Zones — busiest vs most valuable</h2>
+        <div className="pad">
+          <select value={order} onChange={e=>setOrder(e.target.value)}
+                  style={{marginBottom:10}}>
+            <option value="value">by revenue per driver-hour</option>
+            <option value="volume">by trip volume</option>
+          </select>
+          {zones && <table>
+            <thead><tr><th>zone</th><th>trips</th><th>$/driver-hr</th></tr></thead>
+            <tbody>{zones.zones.map((z,i)=>
+              <tr key={i}><td>{z.zone}</td><td>{(z.trips/1000).toFixed(0)}k</td>
+                <td>${z.revenue_per_driver_hour.toFixed(2)}</td></tr>)}
+            </tbody></table>}
+        </div>
+        {summary && <div className="note">
+          The top 12 by volume and the top 12 by value share only
+          {" "}<b>{summary.volume_value_overlap}</b> zones. Busiest is not most valuable.
+        </div>}
+      </div>
+    </div>
+
+    {bt && <div className="panel" style={{marginTop:14}}>
+      <h2>Backtest — trained on Jan–Sep, scored on Oct–Dec</h2>
+      <div className="pad"><table>
+        <thead><tr><th>fleet</th><th>revenue policy</th><th>best baseline</th>
+          <th>lift</th><th>vs uniform</th></tr></thead>
+        <tbody>{bt.lift.map(r=>
+          <tr key={r.fleet_size}><td>{r.fleet_size}</td>
+            <td>{money(r.revenue_policy)}</td><td>{money(r.best_baseline)}</td>
+            <td className="win">+{r.lift_pct}%</td>
+            <td className="win">+{r.vs_uniform_pct}%</td></tr>)}
+        </tbody></table></div>
+      <div className="note">
+        Revenue is realised against the <i>test</i> months' actual observed rates, with a
+        capacity ceiling — drivers sent to a cell with no demand earn nothing. Scoring a
+        policy against the data it was built from would measure nothing.
+      </div>
+    </div>}
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

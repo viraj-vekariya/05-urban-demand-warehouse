@@ -1,0 +1,130 @@
+{
+  "partitions": [
+    {
+      "month": "2024-01",
+      "source_file": "yellow_tripdata_2024-01.parquet",
+      "source_hash": "b2cab80caa959c45",
+      "source_rows": 2964624,
+      "loaded_rows": 2831068,
+      "excluded_rows": 133556,
+      "seconds": 0.54,
+      "skipped": false
+    },
+    {
+      "month": "2024-02",
+      "source_file": "yellow_tripdata_2024-02.parquet",
+      "source_hash": "67cb98b766f0538e",
+      "source_rows": 3007526,
+      "loaded_rows": 2866895,
+      "excluded_rows": 140631,
+      "seconds": 0.27,
+      "skipped": false
+    },
+    {
+      "month": "2024-03",
+      "source_file": "yellow_tripdata_2024-03.parquet",
+      "source_hash": "11c4a55c8f25b3a6",
+      "source_rows": 3582628,
+      "loaded_rows": 3403527,
+      "excluded_rows": 179101,
+      "seconds": 0.28,
+      "skipped": false
+    },
+    {
+      "month": "2024-04",
+      "source_file": "yellow_tripdata_2024-04.parquet",
+      "source_hash": "31f4988af1260026",
+      "source_rows": 3514289,
+      "loaded_rows": 3377240,
+      "excluded_rows": 137049,
+      "seconds": 0.28,
+      "skipped": false
+    },
+    {
+      "month": "2024-05",
+      "source_file": "yellow_tripdata_2024-05.parquet",
+      "source_hash": "c57dcd2589cf81d1",
+      "source_rows": 3723833,
+      "loaded_rows": 3574551,
+      "excluded_rows": 149282,
+      "seconds": 0.29,
+      "skipped": false
+    },
+    {
+      "month": "2024-06",
+      "source_file": "yellow_tripdata_2024-06.parquet",
+      "source_hash": "f39d5d46cea370f5",
+      "source_rows": 3539193,
+      "loaded_rows": 3386026,
+      "excluded_rows": 153167,
+      "seconds": 0.3,
+      "skipped": false
+    },
+    {
+      "month": "2024-07",
+      "source_file": "yellow_tripdata_2024-07.parquet",
+      "source_hash": "980324d56c763600",
+      "source_rows": 3076903,
+      "loaded_rows": 2932600,
+      "excluded_rows": 144303,
+      "seconds": 0.28,
+      "skipped": false
+    },
+    {
+      "month": "2024-08",
+      "source_file": "yellow_tripdata_2024-08.parquet",
+      "source_hash": "7d5a83f11ca6c753",
+      "source_rows": 2979183,
+      "loaded_rows": 2824428,
+      "excluded_rows": 154755,
+      "seconds": 0.29,
+      "skipped": false
+    },
+    {
+      "month": "2024-09",
+      "source_file": "yellow_tripdata_2024-09.parquet",
+      "source_hash": "7cf2d9022d3f9c75",
+      "source_rows": 3633030,
+      "loaded_rows": 3440258,
+      "excluded_rows": 192772,
+      "seconds": 0.29,
+      "skipped": false
+    },
+    {
+      "month": "2024-10",
+      "source_file": "yellow_tripdata_2024-10.parquet",
+      "source_hash": "dac3ec19a84a80c6",
+      "source_rows": 3833771,
+      "loaded_rows": 3630148,
+      "excluded_rows": 203623,
+      "seconds": 0.32,
+      "skipped": false
+    },
+    {
+      "month": "2024-11",
+      "source_file": "yellow_tripdata_2024-11.parquet",
+      "source_hash": "5475d88cda01e004",
+      "source_rows": 3646369,
+      "loaded_rows": 3466518,
+      "excluded_rows": 179851,
+      "seconds": 0.3,
+      "skipped": false
+    },
+    {
+      "month": "2024-12",
+      "source_file": "yellow_tripdata_2024-12.parquet",
+      "source_hash": "4d431b0095ef7ce9",
+      "source_rows": 3668371,
+      "loaded_rows": 3470166,
+      "excluded_rows": 198205,
+      "seconds": 0.29,
+      "skipped": false
+    }
+  ],
+  "months": 12,
+  "source_rows": 41169720,
+  "loaded_rows": 39203425,
+  "excluded_rows": 1966295,
+  "excluded_pct": 4.7761,
+  "warehouse": "/Users/virajvekariya/Desktop/placements project/05-urban-demand-warehouse/data/warehouse"
+}
