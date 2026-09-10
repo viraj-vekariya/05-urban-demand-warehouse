@@ -116,18 +116,38 @@ def test_demand_has_a_believable_rush_hour(conn):
     assert rows[18] > rows[4] * 5, "the evening peak is missing or the hours are shifted"
 
 
-def test_the_partitions_cover_every_month(conn):
-    months = conn.execute(
-        "SELECT COUNT(DISTINCT month) FROM mart_demand").fetchone()[0]
-    assert months == 12
+def test_every_loaded_partition_reaches_the_mart(conn):
+    """The real property is CONSISTENCY, not a fixed month count.
+
+    An earlier version asserted exactly 12 months. That is an assumption about the
+    environment, not about the pipeline: CI loads 3 months to keep the job fast, and the
+    test failed on a build with nothing wrong in it. What actually matters is that every
+    month the watermark says it loaded is present in the mart, and vice versa - which
+    holds at any month count.
+    """
+    watermarked = {m for (m,) in conn.execute(
+        "SELECT DISTINCT month FROM load_watermark").fetchall()}
+    in_mart = {m for (m,) in conn.execute(
+        "SELECT DISTINCT month FROM mart_demand").fetchall()}
+    assert watermarked, "no partitions were loaded at all"
+    assert watermarked == in_mart, (
+        f"loaded but missing from the mart: {sorted(watermarked - in_mart)}; "
+        f"in the mart but never loaded: {sorted(in_mart - watermarked)}")
 
 
-def test_the_watermark_recorded_every_partition(conn):
+def test_every_watermark_row_records_a_real_load(conn):
     n = conn.execute("SELECT COUNT(*) FROM load_watermark").fetchone()[0]
-    assert n == 12
+    assert n > 0, "the watermark table is empty"
     incomplete = conn.execute(
         "SELECT COUNT(*) FROM load_watermark WHERE loaded_rows <= 0").fetchone()[0]
-    assert incomplete == 0
+    assert incomplete == 0, "a partition was recorded as loaded with zero rows"
+    # Every partition must have kept the large majority of its source rows. A partition
+    # that lost most of its trips would pass the consistency check above while being
+    # badly broken.
+    thin = conn.execute(
+        "SELECT COUNT(*) FROM load_watermark WHERE loaded_rows < source_rows * 0.8"
+    ).fetchone()[0]
+    assert thin == 0, "a partition kept under 80% of its source rows"
 
 
 def test_the_exclusion_rate_is_low_after_the_passenger_fix(conn):
