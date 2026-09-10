@@ -1,7 +1,7 @@
 {
   "project": "Urban Demand Warehouse",
   "role": "CV2 / Data Science + Business Analytics - SQL and data-engineering backbone",
-  "generated_at": "2026-09-10T08:27:53",
+  "generated_at": "2026-09-10T08:57:50",
   "data": {
     "source": "NYC TLC yellow-cab trip records, 2024, public",
     "months": 12,
@@ -240,7 +240,7 @@
   ],
   "volume_value_overlap": 4,
   "backtest": {
-    "generated_at": "2026-09-10T07:16:30",
+    "generated_at": "2026-09-10T08:57:31",
     "train_months": [
       "2024-01",
       "2024-02",
@@ -263,10 +263,10 @@
       {
         "fleet_size": 100,
         "policy": "revenue_per_hour",
-        "realised_weekly_revenue": 2169503.47,
-        "revenue_per_driver_hour": 129.1371,
+        "realised_weekly_revenue": 2169651.84,
+        "revenue_per_driver_hour": 129.1459,
         "drivers_to_dead_cells": 568,
-        "drivers_over_capacity": 1081,
+        "drivers_over_capacity": 1080,
         "driver_hours_assigned": 16232
       },
       {
@@ -281,19 +281,19 @@
       {
         "fleet_size": 100,
         "policy": "uniform",
-        "realised_weekly_revenue": 1448374.44,
-        "revenue_per_driver_hour": 86.2128,
-        "drivers_to_dead_cells": 1068,
+        "realised_weekly_revenue": 1440192.2,
+        "revenue_per_driver_hour": 85.7257,
+        "drivers_to_dead_cells": 1120,
         "drivers_over_capacity": 0,
-        "driver_hours_assigned": 15732
+        "driver_hours_assigned": 15680
       },
       {
         "fleet_size": 300,
         "policy": "revenue_per_hour",
-        "realised_weekly_revenue": 6440931.47,
-        "revenue_per_driver_hour": 127.7963,
+        "realised_weekly_revenue": 6441049.41,
+        "revenue_per_driver_hour": 127.7986,
         "drivers_to_dead_cells": 718,
-        "drivers_over_capacity": 2320,
+        "drivers_over_capacity": 2319,
         "driver_hours_assigned": 49682
       },
       {
@@ -317,8 +317,8 @@
       {
         "fleet_size": 500,
         "policy": "revenue_per_hour",
-        "realised_weekly_revenue": 10371293.41,
-        "revenue_per_driver_hour": 123.4678,
+        "realised_weekly_revenue": 10371252.17,
+        "revenue_per_driver_hour": 123.4673,
         "drivers_to_dead_cells": 1024,
         "drivers_over_capacity": 3422,
         "driver_hours_assigned": 82839
@@ -326,11 +326,11 @@
       {
         "fleet_size": 500,
         "policy": "trip_volume",
-        "realised_weekly_revenue": 8939126.71,
-        "revenue_per_driver_hour": 106.4182,
-        "drivers_to_dead_cells": 203,
-        "drivers_over_capacity": 1989,
-        "driver_hours_assigned": 83660
+        "realised_weekly_revenue": 8939512.16,
+        "revenue_per_driver_hour": 106.4228,
+        "drivers_to_dead_cells": 201,
+        "drivers_over_capacity": 1988,
+        "driver_hours_assigned": 83662
       },
       {
         "fleet_size": 500,
@@ -344,20 +344,20 @@
       {
         "fleet_size": 1000,
         "policy": "revenue_per_hour",
-        "realised_weekly_revenue": 19158827.52,
-        "revenue_per_driver_hour": 114.0406,
+        "realised_weekly_revenue": 19158880.49,
+        "revenue_per_driver_hour": 114.041,
         "drivers_to_dead_cells": 1550,
-        "drivers_over_capacity": 4825,
+        "drivers_over_capacity": 4824,
         "driver_hours_assigned": 161886
       },
       {
         "fleet_size": 1000,
         "policy": "trip_volume",
-        "realised_weekly_revenue": 17194139.03,
-        "revenue_per_driver_hour": 102.3461,
-        "drivers_to_dead_cells": 683,
-        "drivers_over_capacity": 4155,
-        "driver_hours_assigned": 162753
+        "realised_weekly_revenue": 17194306.17,
+        "revenue_per_driver_hour": 102.3471,
+        "drivers_to_dead_cells": 682,
+        "drivers_over_capacity": 4154,
+        "driver_hours_assigned": 162754
       },
       {
         "fleet_size": 1000,
@@ -372,40 +372,40 @@
     "lift": [
       {
         "fleet_size": 100,
-        "revenue_policy": 2169503.47,
+        "revenue_policy": 2169651.84,
         "best_baseline": 1842185.42,
         "best_baseline_policy": "trip_volume",
-        "lift_pct": 17.77,
-        "vs_uniform_pct": 49.79
+        "lift_pct": 17.78,
+        "vs_uniform_pct": 50.65
       },
       {
         "fleet_size": 300,
-        "revenue_policy": 6440931.47,
+        "revenue_policy": 6441049.41,
         "best_baseline": 5425621.6,
         "best_baseline_policy": "trip_volume",
-        "lift_pct": 18.71,
+        "lift_pct": 18.72,
         "vs_uniform_pct": 104.43
       },
       {
         "fleet_size": 500,
-        "revenue_policy": 10371293.41,
-        "best_baseline": 8939126.71,
+        "revenue_policy": 10371252.17,
+        "best_baseline": 8939512.16,
         "best_baseline_policy": "trip_volume",
         "lift_pct": 16.02,
         "vs_uniform_pct": 98.75
       },
       {
         "fleet_size": 1000,
-        "revenue_policy": 19158827.52,
-        "best_baseline": 17194139.03,
+        "revenue_policy": 19158880.49,
+        "best_baseline": 17194306.17,
         "best_baseline_policy": "trip_volume",
         "lift_pct": 11.43,
         "vs_uniform_pct": 138.92
       }
     ],
-    "mean_lift_over_best_baseline_pct": 15.98,
+    "mean_lift_over_best_baseline_pct": 15.99,
     "seconds": 1.2
   },
-  "tests": "48 passed in 0.09s",
-  "seconds": 2.8
+  "tests": "48 passed in 0.10s",
+  "seconds": 2.6
 }

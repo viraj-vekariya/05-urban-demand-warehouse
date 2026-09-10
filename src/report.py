@@ -24,8 +24,10 @@ from src.seasonal import decompose, hour_of_week_profile  # noqa: E402
 
 DB = ROOT / "data" / "urban.duckdb"
 OUTPUTS = ROOT / "outputs"
-TRAIN_MONTHS = [f"2024-{m:02d}" for m in range(1, 10)]
-TEST_MONTHS = [f"2024-{m:02d}" for m in range(10, 13)]
+# Derived at runtime from the months actually loaded - see src/backtest.split_months for
+# why a hard-coded split broke on a reduced dataset.
+TRAIN_MONTHS: List[str] = []
+TEST_MONTHS: List[str] = []
 
 
 def forecast_rows(conn, months: List[str]) -> List[Dict[str, object]]:
@@ -77,6 +79,12 @@ def main() -> int:
         return 1
     conn = duckdb.connect(str(DB), read_only=True)
     started = time.time()
+
+    global TRAIN_MONTHS, TEST_MONTHS
+    from src.backtest import split_months
+    TRAIN_MONTHS, TEST_MONTHS = split_months(conn)
+    print(f"months: train {TRAIN_MONTHS[0]}..{TRAIN_MONTHS[-1]}, "
+          f"test {TEST_MONTHS[0]}..{TEST_MONTHS[-1]}")
 
     print("forecast: gradient-boosted trees vs the historical-cell-mean baseline")
     train = forecast_rows(conn, TRAIN_MONTHS)

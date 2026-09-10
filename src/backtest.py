@@ -41,8 +41,22 @@ from src.allocate import Cell, allocate_by_volume, allocate_hour, allocate_unifo
 DB = ROOT / "data" / "urban.duckdb"
 OUTPUTS = ROOT / "outputs"
 
-TRAIN_MONTHS = [f"2024-{m:02d}" for m in range(1, 10)]
-TEST_MONTHS = [f"2024-{m:02d}" for m in range(10, 13)]
+def split_months(conn, test_fraction: float = 0.25) -> Tuple[List[str], List[str]]:
+    """Split the months that are ACTUALLY LOADED into train and test, latest as test.
+
+    Not a hard-coded Jan-Sep / Oct-Dec. CI loads three months to keep the job fast, and a
+    fixed split then pointed the test set at months with no data at all: every cell was
+    "dead", every policy earned nothing, and the lift computation divided by an empty
+    list. Deriving the split from what is present makes the backtest correct at any month
+    count while keeping the property that matters - the test period is strictly after the
+    training period, because a random split would leak.
+    """
+    months = [m for (m,) in conn.execute(
+        "SELECT DISTINCT month FROM mart_demand ORDER BY month").fetchall()]
+    if len(months) < 2:
+        raise ValueError(f"need at least 2 months to backtest, found {len(months)}")
+    n_test = max(1, int(round(len(months) * test_fraction)))
+    return months[:-n_test], months[-n_test:]
 
 
 def load_cells(conn, months: Sequence[str]) -> List[Cell]:
@@ -109,10 +123,13 @@ def backtest(fleet_sizes: Sequence[int] = (100, 300, 500, 1000)) -> Dict[str, ob
     conn = duckdb.connect(str(DB), read_only=True)
     started = time.time()
 
-    train_cells = load_cells(conn, TRAIN_MONTHS)
-    realised = realised_rates(conn, TEST_MONTHS)
-    print(f"  {len(train_cells):,} training cells (months {TRAIN_MONTHS[0]}..{TRAIN_MONTHS[-1]})")
-    print(f"  {len(realised):,} test cells   (months {TEST_MONTHS[0]}..{TEST_MONTHS[-1]})")
+    train_months, test_months = split_months(conn)
+    train_cells = load_cells(conn, train_months)
+    realised = realised_rates(conn, test_months)
+    print(f"  {len(train_cells):,} training cells (months {train_months[0]}..{train_months[-1]})")
+    print(f"  {len(realised):,} test cells   (months {test_months[0]}..{test_months[-1]})")
+    if not realised:
+        raise ValueError("the test months contain no cells; the split is wrong")
 
     policies = {"revenue_per_hour": allocate_hour,
                 "trip_volume": allocate_by_volume,
@@ -168,9 +185,12 @@ def backtest(fleet_sizes: Sequence[int] = (100, 300, 500, 1000)) -> Dict[str, ob
             if policies_revenue["uniform"] else None,
         })
 
+    if not lifts:
+        raise ValueError("no lift could be computed; every policy earned nothing")
+
     return {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "train_months": TRAIN_MONTHS, "test_months": TEST_MONTHS,
+        "train_months": train_months, "test_months": test_months,
         "train_cells": len(train_cells), "test_cells": len(realised),
         "results": results,
         "lift": lifts,
@@ -184,9 +204,9 @@ def main() -> int:
     if not DB.exists():
         print("no warehouse; run python3 -m src.build", file=sys.stderr)
         return 1
-    print(f"backtest: train {TRAIN_MONTHS[0]}..{TRAIN_MONTHS[-1]}, "
-          f"test {TEST_MONTHS[0]}..{TEST_MONTHS[-1]}\n")
     report = backtest()
+    print(f"backtest: train {report['train_months'][0]}..{report['train_months'][-1]}, "
+          f"test {report['test_months'][0]}..{report['test_months'][-1]}\n")
 
     print(f"\n  lift of revenue-per-hour ranking over the best baseline")
     for row in report["lift"]:
