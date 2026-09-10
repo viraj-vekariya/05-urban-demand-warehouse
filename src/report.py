@@ -155,7 +155,10 @@ def main() -> int:
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "data": {
             "source": "NYC TLC yellow-cab trip records, 2024, public",
-            "months": 12,
+            # Derived, not asserted. This said 12 while the deployed image loads 3, so
+            # the API reported a year of data over a quarter of it - every other field
+            # here comes from the run, and this one did not.
+            "months": etl["months"] if etl else None,
             "source_rows": etl["source_rows"] if etl else None,
             "loaded_rows": warehouse["totals"]["trips"],
             "excluded_pct": etl["excluded_pct"] if etl else None,
