@@ -1,5 +1,7 @@
 # Urban Demand Warehouse
 
+**[▶ Live demo](https://viraj-vekariya.github.io/05-urban-demand-warehouse/)** — the fleet allocation runs in your browser over all 39,033 real cells. The bounded-heap top-k and greedy capacity fill are reimplemented in JavaScript and [verified against the Python](tools/check_js_matches_python.py) on 15 cases.
+
 **Where should the fleet be tomorrow?** A partitioned Parquet warehouse over **39.2 million
 real NYC taxi trips**, a SQL demand mart, a capacity-constrained allocation algorithm, and
 a backtest on held-out months that says how much the allocation is actually worth.
