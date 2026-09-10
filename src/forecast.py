@@ -134,7 +134,12 @@ def fit_gbm(train: Sequence[Dict[str, object]], test: Sequence[Dict[str, object]
         importance = dict(zip(names, (model.feature_importances_ /
                                       max(1, model.feature_importances_.sum())).round(4)))
         return model.predict(X_test), {k: float(v) for k, v in importance.items()}
-    except ImportError:
+    except (ImportError, OSError):
+        # OSError as well as ImportError: LightGBM is a Python wrapper around a compiled
+        # library, so on a machine missing libgomp it is installed and importable right
+        # up until it dlopen()s and raises OSError. Catching only ImportError turned a
+        # missing system package into a hard failure of the entire pipeline rather than
+        # the graceful degradation this fallback exists to provide.
         from sklearn.ensemble import HistGradientBoostingRegressor
         model = HistGradientBoostingRegressor(
             max_iter=300, learning_rate=0.05, max_leaf_nodes=63, random_state=seed)

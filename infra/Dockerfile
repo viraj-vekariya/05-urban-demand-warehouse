@@ -6,7 +6,10 @@
 # today.
 FROM python:3.12-slim AS build
 WORKDIR /build
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+# libgomp1 is LightGBM's OpenMP runtime. python:3.12-slim does not ship it, and without
+# it `import lightgbm` raises OSError (not ImportError) partway through loading its shared
+# library - which killed the build after the download and the whole ETL had already run.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 # pyspark is excluded from the image: it needs a JVM and ~400MB, and the serving path
@@ -52,4 +55,5 @@ HEALTHCHECK --interval=20s --timeout=4s --start-period=15s --retries=3 \
     CMD python -c "import urllib.request,sys; \
         sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8500/health',timeout=3).status==200 else 1)"
 
-CMD ["uvicorn", "dashboard.app:app", "--host", "0.0.0.0", "--port", "8500"]
+# ${PORT} because the platform assigns it; 8500 locally where it does not.
+CMD ["sh", "-c", "uvicorn dashboard.app:app --host 0.0.0.0 --port ${PORT:-8500}"]
