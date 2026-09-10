@@ -1,0 +1,21 @@
+# Render blueprint. Free tier: 512 MB RAM, spins down after 15 minutes idle.
+#
+# MONTHS=2 rather than 12: the image bakes the warehouse in at build time, and twelve
+# months of Parquet would make it far larger than the free tier's build budget. The
+# pipeline is identical - `make all` locally reproduces the full year, and the README's
+# numbers come from that run.
+services:
+  - type: web
+    name: urban-demand-warehouse
+    runtime: docker
+    dockerfilePath: ./infra/Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    autoDeploy: true
+    dockerBuildArgs:
+      MONTHS: "2"
+    envVars:
+      - key: URBAN_DB
+        value: /app/data/urban.duckdb
