@@ -1,9 +1,14 @@
 # Render blueprint. Free tier: 512 MB RAM, spins down after 15 minutes idle.
 #
-# MONTHS=2 rather than 12: the image bakes the warehouse in at build time, and twelve
-# months of Parquet would make it far larger than the free tier's build budget. The
-# pipeline is identical - `make all` locally reproduces the full year, and the README's
-# numbers come from that run.
+# The image bakes the warehouse in at build time and loads THREE months, not twelve:
+# twelve months of Parquet would exceed the free tier's build budget. Three is also what
+# CI loads, so it is the path that is actually exercised on every push. The pipeline is
+# identical - `make all` locally reproduces the full year, and the README's numbers come
+# from that run.
+#
+# The month count is `ARG MONTHS=3` in the Dockerfile rather than an override here:
+# Render's blueprint schema has no `dockerBuildArgs` field, which it rejects at parse
+# time rather than silently ignoring.
 services:
   - type: web
     name: urban-demand-warehouse
@@ -14,8 +19,6 @@ services:
     region: singapore
     healthCheckPath: /health
     autoDeploy: true
-    dockerBuildArgs:
-      MONTHS: "2"
     envVars:
       - key: URBAN_DB
         value: /app/data/urban.duckdb
